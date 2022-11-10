@@ -1,0 +1,4 @@
+CMakeFiles/
+*.txt
+Makefile
+.clangd/

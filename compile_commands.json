@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/mnt/d/GitHub/DumpElf",
+  "command": "/usr/bin/cc     -Wall -g -o CMakeFiles/DumpElf.dir/dump.o   -c /mnt/d/GitHub/DumpElf/dump.c",
+  "file": "/mnt/d/GitHub/DumpElf/dump.c"
+},
+{
+  "directory": "/mnt/d/GitHub/DumpElf",
+  "command": "/usr/bin/cc     -Wall -g -o CMakeFiles/DumpElf.dir/log.o   -c /mnt/d/GitHub/DumpElf/log.c",
+  "file": "/mnt/d/GitHub/DumpElf/log.c"
+},
+{
+  "directory": "/mnt/d/GitHub/DumpElf",
+  "command": "/usr/bin/cc     -Wall -g -o CMakeFiles/DumpElf.dir/main.o   -c /mnt/d/GitHub/DumpElf/main.c",
+  "file": "/mnt/d/GitHub/DumpElf/main.c"
+}
+]

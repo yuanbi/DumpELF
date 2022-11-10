@@ -1,6 +1,6 @@
 
 
-
-
-
-#define ERROR_GET_BASE 0x0001
+#define ERROR_GET_BASE				0x0001
+#define ERROR_NOT_ATTACH			0x0002
+#define ERROR_READ_MEM_SIZE			0x0003
+#define ERROR_READ_MEM				0x0004
