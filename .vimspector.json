@@ -1,0 +1,12 @@
+{
+"configurations": {
+"Launch": {
+"adapter": "vscode-cpptools",
+"configuration": {
+"request": "launch",
+"program": "./main",
+"stopAtEntry": false
+}
+}
+}
+}
