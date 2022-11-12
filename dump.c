@@ -280,7 +280,27 @@ uint32_t readmem_by_ptrace(uint64_t addr, void* mem, uint32_t size)
 
 uint32_t readmem_by_procmem(uint64_t addr, void* mem, uint32_t size)
 {
-	return 0;
+	int result = -1;
+	char path[0x100] = {0};
+	
+	do{
+		if(!g_dump_info.g_attached_pid)
+			break;
+
+		sprintf(path, "/proc/%d/mem", g_dump_info.g_attached_pid);
+		int fd = open(path, O_RDONLY);
+		if(fd <= 0)
+			break;
+
+		lseek64(fd, addr, SEEK_SET);
+		read(fd, mem, size);
+		close(fd);
+
+		result = 0;
+
+	}while(0);
+
+	return result;
 }
 
 uint32_t readmem_by_syscall(uint64_t addr, void* mem, uint32_t size)
@@ -337,8 +357,8 @@ uint32_t read_mem(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t 
 		if (!(result = readmem_by_ptrace(addr, mem, size)))
 			break;
 
-		/*if (!(result = readmem_by_procmem(addr, mem, size)))*/
-		/*break;*/
+		if (!(result = readmem_by_procmem(addr, mem, size)))
+		break;
 
 		/*if (!(result = readmem_by_syscall(addr, mem, size)))*/
 		/*break;*/

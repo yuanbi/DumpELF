@@ -28,8 +28,8 @@ int main()
 	/*}*/
 
 	struct mem_info* mem_info = 0;
-	result = dumpnot_init("/mnt/d/dump", &mem_info);
-	/*show_mems_info(mem_info);*/
+	result = dumpnot_init("/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump", &mem_info);
+	show_mems_info(mem_info);
 
 	read_mem(mem_info, 0x7f6197ab9002,  buf, 3);
 	dumpnot_release(mem_info);
