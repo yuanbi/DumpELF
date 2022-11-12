@@ -1,7 +1,9 @@
+#ifndef H_DUMP
+#define H_DUMP
 #include <stdint.h>
 
-#define MODE_PROCESS	0x01
-#define MODE_WHOLE_MEM  0x02
+#define MODE_PROCESS 0x01
+#define MODE_WHOLE_MEM 0x02
 
 struct list_entry
 {
@@ -24,9 +26,11 @@ struct mem_info
 	char path[0x200];
 };
 
+uint32_t read_mem(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t size);
 
-void free_nodes(void* head);
-uint32_t get_pid_name(uint32_t pid, char* name, uint32_t name_len);
-uint32_t get_pid_mem(uint32_t pid, struct mem_info** base);
+uint32_t dumpnot_init(char* path, struct mem_info** mem_info);
+void dumpnot_release(struct mem_info* meminfo);
 uint32_t dump_process(uint32_t pid, char* dir_path, uint32_t mode);
-uint32_t read_mem(uint64_t addr, void* mem, uint32_t size);
+
+#endif
+
