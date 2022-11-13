@@ -23,6 +23,7 @@ struct mem_info
 	uint16_t map_major;
 	uint16_t map_minor;
 	uint32_t inode_id;
+	uint8_t process_mem;
 	char path[0x200];
 };
 

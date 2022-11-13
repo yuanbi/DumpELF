@@ -1,5 +1,4 @@
 #include "dump.h"
-#include "log.h"
 
 #include <errno.h>
 #include <memory.h>
@@ -14,6 +13,7 @@
 #include <unistd.h>
 
 #include "errors.h"
+#include "log.h"
 
 struct dump_info
 {
@@ -117,7 +117,7 @@ uint32_t save_mapsinfo(uint32_t pid, char* path)
 		fclose(fp_out);
 	} while (0);
 
-	return 0;
+	return result;
 }
 
 uint32_t parse_map_line(char* line, struct mem_info* mem)
@@ -170,6 +170,14 @@ uint32_t get_mems_info(uint32_t pid, struct mem_info** base)
 
 			if ((result = parse_map_line(buf, mem)))
 				break;
+
+			/*if(pid)*/
+			/*{*/
+				/*char name[0x60] = {0};*/
+				/*get_pid_name(pid, name, 0x60);*/
+				/*if(strstr(mem->path, name))*/
+					/*mem->process_mem = 1;*/
+			/*}*/
 
 			append_node(&head, mem);
 		}
@@ -280,25 +288,26 @@ uint32_t readmem_by_ptrace(uint64_t addr, void* mem, uint32_t size)
 
 uint32_t readmem_by_procmem(uint64_t addr, void* mem, uint32_t size)
 {
-	int result = -1;
+	int result		 = -1;
 	char path[0x100] = {0};
-	
-	do{
-		if(!g_dump_info.g_attached_pid)
+	int fd			 = 0;
+
+	do
+	{
+		if (!g_dump_info.g_attached_pid)
 			break;
 
 		sprintf(path, "/proc/%d/mem", g_dump_info.g_attached_pid);
-		int fd = open(path, O_RDONLY);
-		if(fd <= 0)
+		fd = open(path, O_RDONLY);
+		if (fd <= 0)
 			break;
 
 		lseek64(fd, addr, SEEK_SET);
-		read(fd, mem, size);
+		if (read(fd, mem, size) != size)
+			result = 0;
+
 		close(fd);
-
-		result = 0;
-
-	}while(0);
+	} while (0);
 
 	return result;
 }
@@ -310,10 +319,10 @@ uint32_t readmem_by_syscall(uint64_t addr, void* mem, uint32_t size)
 
 uint32_t readmem_by_file(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t size)
 {
-	char path[0x230] = {0};
-	char* name_path = 0;
-	FILE* fp = 0;
-	uint32_t offset = 0;
+	char path[0x230]   = {0};
+	char* name_path	   = 0;
+	FILE* fp		   = 0;
+	uint32_t offset	   = 0;
 	uint32_t file_size = 0;
 
 	for (; mem_info; mem_info = next_node(mem_info))
@@ -324,19 +333,19 @@ uint32_t readmem_by_file(struct mem_info* mem_info, uint64_t addr, void* mem, ui
 	offset = addr - mem_info->addr_start;
 
 	name_path = path2name(mem_info->path);
-	if(!name_path) return -1;
+	if (!name_path) return -1;
 
-	sprintf(path, "%s%lx-%lx__%s",g_dump_info.mem_path, mem_info->addr_start, mem_info->addr_end, name_path);
+	sprintf(path, "%s%lx-%lx__%s", g_dump_info.mem_path, mem_info->addr_start, mem_info->addr_end, name_path);
 	/*LOG_INFO("Read mem by file: %s\n", path);*/
 	fp = fopen(path, "rb");
-	if(fp <= 0) return -1;
+	if (fp <= 0) return -1;
 
 	fseek(fp, SEEK_SET, SEEK_END);
 	file_size = ftell(fp);
 	rewind(fp);
 
 	offset = addr - mem_info->addr_start;
-	if(size > file_size || (offset + size) > file_size)
+	if (size > file_size || (offset + size) > file_size)
 	{
 		fclose(fp);
 		return -1;
@@ -358,7 +367,7 @@ uint32_t read_mem(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t 
 			break;
 
 		if (!(result = readmem_by_procmem(addr, mem, size)))
-		break;
+			break;
 
 		/*if (!(result = readmem_by_syscall(addr, mem, size)))*/
 		/*break;*/
@@ -372,7 +381,6 @@ uint32_t read_mem(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t 
 
 	return result;
 }
-
 
 uint32_t write_mem_file(char* path, struct mem_info* meminfo)
 {
@@ -499,23 +507,22 @@ uint32_t dump_process(uint32_t pid, char* dir_path, uint32_t mode)
 }
 
 //
-//与 dumpnot_release 搭配使用
-//若需在文件中解析内存数据，则使用此函数初始化
+// 与 dumpnot_release 搭配使用
+// 若需在文件中解析内存数据，则使用此函数初始化
 //
 uint32_t dumpnot_init(char* path, struct mem_info** mem_info)
 {
 	uint32_t result = 0;
-	
+
 	memset(g_dump_info.mem_path, 0, 0x200);
 	strcat(g_dump_info.mem_path, path);
-	if(g_dump_info.mem_path[strlen(g_dump_info.mem_path) - 1] != '/')
+	if (g_dump_info.mem_path[strlen(g_dump_info.mem_path) - 1] != '/')
 		g_dump_info.mem_path[strlen(g_dump_info.mem_path)] = '/';
 
 	result = get_mems_info(0, mem_info);
-	
+
 	return result;
 }
-
 
 void dumpnot_release(struct mem_info* mem_info)
 {
