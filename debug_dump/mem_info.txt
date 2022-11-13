@@ -1,0 +1,22 @@
+7f6197880000-7f61978a2000 r--p 00000000 00:00 210581             /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7f61978a2000-7f6197a1a000 r-xp 00022000 00:00 210581             /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7f6197a1a000-7f6197a68000 r--p 0019a000 00:00 210581             /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7f6197a68000-7f6197a6c000 r--p 001e7000 00:00 210581             /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7f6197a6c000-7f6197a6e000 rw-p 001eb000 00:00 210581             /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7f6197a6e000-7f6197a72000 rw-p 00000000 00:00 0
+7f6197a80000-7f6197a81000 r--p 00000000 00:00 210577             /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7f6197a81000-7f6197aa3000 r-xp 00001000 00:00 210577             /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7f6197aa3000-7f6197aa4000 r-xp 00023000 00:00 210577             /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7f6197aa4000-7f6197aab000 r--p 00024000 00:00 210577             /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7f6197aab000-7f6197aac000 r--p 0002b000 00:00 210577             /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7f6197aad000-7f6197aae000 r--p 0002c000 00:00 210577             /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7f6197aae000-7f6197aaf000 rw-p 0002d000 00:00 210577             /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7f6197aaf000-7f6197ab2000 rw-p 00000000 00:00 0
+7f6197ab9000-7f6197aba000 r--p 00000000 00:00 132838             /home/yuan/main
+7f6197aba000-7f6197abb000 r-xp 00001000 00:00 132838             /home/yuan/main
+7f6197abb000-7f6197abc000 r--p 00002000 00:00 132838             /home/yuan/main
+7f6197abc000-7f6197abd000 r--p 00002000 00:00 132838             /home/yuan/main
+7f6197abd000-7f6197abe000 rw-p 00003000 00:00 132838             /home/yuan/main
+7fffdf068000-7fffdf089000 rw-p 00000000 00:00 0                  [heap]
+7fffe62d6000-7fffe6ad6000 rw-p 00000000 00:00 0                  [stack]
+7fffe6b1c000-7fffe6b1d000 r-xp 00000000 00:00 0                  [vdso]
