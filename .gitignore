@@ -2,3 +2,9 @@ CMakeFiles/
 Makefile
 .clangd/
 *.cmake
+CMakeCache.txt
+log.txt
+.cache/
+*.o
+*.out
+*.vim*

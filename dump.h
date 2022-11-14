@@ -31,7 +31,7 @@ uint32_t read_mem(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t 
 
 uint32_t dumpnot_init(char* path, struct mem_info** mem_info);
 void dumpnot_release(struct mem_info* meminfo);
-uint32_t dump_process(uint32_t pid, char* dir_path, uint32_t mode);
+uint32_t dump_memory(uint32_t pid, char* dir_path, uint32_t mode);
 
 #endif
 

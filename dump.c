@@ -9,8 +9,10 @@
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "errors.h"
 #include "log.h"
@@ -217,7 +219,7 @@ uint32_t do_wait(uint32_t pid)
 
 uint32_t attach_pid(uint32_t pid)
 {
-	int status = 0;
+	/*int status = 0;*/
 
 	if (ptrace(PTRACE_ATTACH, pid, 0, 0) < 0)
 		return ERROR_NOT_ATTACH;
@@ -430,7 +432,7 @@ uint32_t write_mem_file(char* path, struct mem_info* meminfo)
 	return result;
 }
 
-uint32_t dump_process(uint32_t pid, char* dir_path, uint32_t mode)
+uint32_t dump_memory(uint32_t pid, char* dir_path, uint32_t mode)
 {
 	uint32_t result		  = 0;
 	struct mem_info* mems = 0;

@@ -6,6 +6,11 @@
 },
 {
   "directory": "/mnt/d/GitHub/DumpElf",
+  "command": "/usr/bin/cc     -Wall -g -o CMakeFiles/main.dir/elf_build.o   -c /mnt/d/GitHub/DumpElf/elf_build.c",
+  "file": "/mnt/d/GitHub/DumpElf/elf_build.c"
+},
+{
+  "directory": "/mnt/d/GitHub/DumpElf",
   "command": "/usr/bin/cc     -Wall -g -o CMakeFiles/main.dir/log.o   -c /mnt/d/GitHub/DumpElf/log.c",
   "file": "/mnt/d/GitHub/DumpElf/log.c"
 },

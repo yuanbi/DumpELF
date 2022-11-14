@@ -1,6 +1,7 @@
 
 #include "log.h"
 #include "dump.h"
+#include "elf_build.h"
 #include <errno.h>
 #include <stdio.h>
 
@@ -28,10 +29,20 @@ int main()
 	/*}*/
 
 	struct mem_info* mem_info = 0;
-	result = dumpnot_init("/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump", &mem_info);
-	show_mems_info(mem_info);
+	/*result = dumpnot_init("/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump", &mem_info);*/
+	result = dump_memory(29121,"/mnt/d/dump/", MODE_WHOLE_MEM);
+	/*show_mems_info(mem_info);*/
 
-	read_mem(mem_info, 0x7f6197ab9002,  buf, 3);
+	if(!(result = dumpnot_init("/mnt/d/dump/", &mem_info)))
+	{
+		printf("Init failed!\n");
+	}
+
+	if(!(result = elf_build(mem_info, "/mnt/d/dump/", "main")))
+	{
+		printf("Build elf failed\n");
+	}
+
 	dumpnot_release(mem_info);
 
 	buf[3] = '\0';
