@@ -17,7 +17,7 @@ void show_mems_info(struct mem_info* mem_info)
 
 int main()
 {
-	uint32_t pid = 1309;
+	uint32_t pid = 1948;
 	char buf[0x200] = {0};
 	uint32_t result = 0;
 
@@ -30,24 +30,21 @@ int main()
 
 	struct mem_info* mem_info = 0;
 	/*result = dumpnot_init("/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump", &mem_info);*/
-	result = dump_memory(29121,"/mnt/d/dump/", MODE_WHOLE_MEM);
+	result = dump_memory(pid,"/mnt/d/dump/", MODE_WHOLE_MEM);
 	/*show_mems_info(mem_info);*/
 
-	if(!(result = dumpnot_init("/mnt/d/dump/", &mem_info)))
+	if((result = dumpnot_init("/mnt/d/dump/", &mem_info)))
 	{
-		printf("Init failed!\n");
+		printf("Init failed: %08x!\n", result);
 	}
 
-	if(!(result = elf_build(mem_info, "/mnt/d/dump/", "main")))
+	if((result = elf_build(mem_info, "/mnt/d/dump/", "main")))
 	{
 		printf("Build elf failed\n");
 	}
 
+	printf("Build elf end: %08x\n", result);
 	dumpnot_release(mem_info);
-
-	buf[3] = '\0';
-	printf("readed string: %s", buf);
-
 
 	return 0;
 }

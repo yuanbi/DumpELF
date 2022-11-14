@@ -19,7 +19,7 @@
 
 struct dump_info
 {
-	pid_t g_attached_pid;
+	pid_t attached_pid;
 	char mem_path[0x200];
 };
 
@@ -246,7 +246,7 @@ uint32_t attach_pid(uint32_t pid)
 	/*}*/
 	/*LOG_INFO("Conted\n");*/
 
-	g_dump_info.g_attached_pid = pid;
+	g_dump_info.attached_pid = pid;
 	return 0;
 }
 
@@ -255,7 +255,8 @@ uint32_t deatch_pid(uint32_t pid)
 	if (!pid)
 		return -1;
 
-	ptrace(PTRACE_DETACH, g_dump_info.g_attached_pid);
+	ptrace(PTRACE_DETACH, g_dump_info.attached_pid);
+	g_dump_info.attached_pid = 0;
 
 	return 0;
 }
@@ -263,7 +264,7 @@ uint32_t deatch_pid(uint32_t pid)
 uint32_t readmem_by_ptrace(uint64_t addr, void* mem, uint32_t size)
 {
 	uint64_t m = 0;
-	if (!g_dump_info.g_attached_pid)
+	if (!g_dump_info.attached_pid)
 		return -1;
 
 	if (size % 8)
@@ -275,10 +276,10 @@ uint32_t readmem_by_ptrace(uint64_t addr, void* mem, uint32_t size)
 	for (int i = 0; i < size; i += 8)
 	{
 		m = 0;
-		m = ptrace(PTRACE_PEEKDATA, g_dump_info.g_attached_pid, addr + i, 0);
+		m = ptrace(PTRACE_PEEKDATA, g_dump_info.attached_pid, addr + i, 0);
 		if (errno != 0)
 		{
-			LOG_INFO("Read mem failed, will fill 0, size 8, Addr: %lu\n", addr + i);
+			LOG_INFO("Read mem failed, will fill 0, size 8, Addr: %lx\n", addr + i);
 			m = 0;
 		}
 
@@ -296,10 +297,10 @@ uint32_t readmem_by_procmem(uint64_t addr, void* mem, uint32_t size)
 
 	do
 	{
-		if (!g_dump_info.g_attached_pid)
+		if (!g_dump_info.attached_pid)
 			break;
 
-		sprintf(path, "/proc/%d/mem", g_dump_info.g_attached_pid);
+		sprintf(path, "/proc/%d/mem", g_dump_info.attached_pid);
 		fd = open(path, O_RDONLY);
 		if (fd <= 0)
 			break;
@@ -326,6 +327,7 @@ uint32_t readmem_by_file(struct mem_info* mem_info, uint64_t addr, void* mem, ui
 	FILE* fp		   = 0;
 	uint32_t offset	   = 0;
 	uint32_t file_size = 0;
+	uint32_t readed_size = 0;
 
 	for (; mem_info; mem_info = next_node(mem_info))
 		if (mem_info->addr_start <= addr && mem_info->addr_end > addr)
@@ -342,20 +344,17 @@ uint32_t readmem_by_file(struct mem_info* mem_info, uint64_t addr, void* mem, ui
 	fp = fopen(path, "rb");
 	if (fp <= 0) return -1;
 
-	fseek(fp, SEEK_SET, SEEK_END);
-	file_size = ftell(fp);
-	rewind(fp);
+	fseek(fp, offset, SEEK_SET);
+	readed_size = fread(mem, 1, size, fp);
+	fclose(fp);
 
-	offset = addr - mem_info->addr_start;
-	if (size > file_size || (offset + size) > file_size)
+	if(readed_size > 0 && readed_size < size)
 	{
-		fclose(fp);
-		return -1;
+		mem = (void*)((uint64_t)mem + readed_size);
+		size = size - readed_size;
+		return readmem_by_file(mem_info, addr + readed_size, mem, size);
 	}
 
-	fseek(fp, offset, SEEK_SET);
-	fread(mem, 1, size, fp);
-	fclose(fp);
 	return 0;
 }
 
@@ -500,7 +499,7 @@ uint32_t dump_memory(uint32_t pid, char* dir_path, uint32_t mode)
 		}
 	} while (0);
 
-	if (g_dump_info.g_attached_pid) deatch_pid(g_dump_info.g_attached_pid);
+	if (g_dump_info.attached_pid) deatch_pid(g_dump_info.attached_pid);
 	if (name_process) free(name_process);
 	if (mem) free(mem);
 	if (mems) free_nodes(mems);

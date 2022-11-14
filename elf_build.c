@@ -56,31 +56,37 @@ uint32_t elf_build(struct mem_info* mem_info, char* dir_path, char* module_name)
 		}
 
 		base = mem_info->addr_start;
-		if(!(result = read_mem(mem_info, base, (void*)&hdr, sizeof(Elf64_Ehdr))))
+		if((result = read_mem(mem_info, base, (void*)&hdr, sizeof(Elf64_Ehdr))))
 			break;
 
 		phdr = malloc(hdr.e_phnum * hdr.e_phentsize);
-		if(!(result = read_mem(mem_info, base + hdr.e_phoff, (void*)phdr, hdr.e_phnum * hdr.e_phentsize)))
+		if((result = read_mem(mem_info, base + hdr.e_phoff, (void*)phdr, hdr.e_phnum * hdr.e_phentsize)))
 			break;
 
 		for(int i = 0; i < hdr.e_phnum; i++)
 		{
-			if(phdr[i].p_flags != PT_LOAD || phdr[i].p_flags != PT_DYNAMIC)
+			if(phdr[i].p_type != PT_LOAD && phdr[i].p_type != PT_DYNAMIC)
 				continue;
 
 			if(phdr[i].p_offset > file_size)
 			{
+				LOG_INFO("Append bytes: %08x\n", phdr[i].p_offset - file_size);
 				p = malloc(phdr[i].p_offset - file_size);
 				memset(p, 0, phdr[i].p_offset - file_size);
 				fwrite(p, 1, phdr[i].p_offset - file_size, fp);
+				file_size = file_size + phdr[i].p_offset - file_size;
+
 				free(p);
 			}
 
+			LOG_INFO("Read addr: %lx, size: %08x\n", base + phdr[i].p_paddr, phdr[i].p_filesz);
 			p = malloc(phdr[i].p_filesz);
-			if(!(result = read_mem(mem_info, base + phdr[i].p_vaddr, (void*)p, phdr[i].p_filesz)))
+			if((result = read_mem(mem_info, base + phdr[i].p_vaddr, (void*)p, phdr[i].p_filesz)))
 				break;
 
 			fwrite(p, 1, phdr[i].p_filesz, fp);
+			file_size = file_size + phdr[i].p_filesz;
+
 			free(p);
 			p = NULL;
 		}
