@@ -11,11 +11,11 @@
 typedef uint32_t (*fn_read_mem)(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t size);
 fn_read_mem g_read_mem = 0;
 
-uint32_t mem_build(struct mem_info* mem_info, char* dir_path, char* module_name)
+uint32_t mem_build(struct mem_info* mem_info, uint64_t* base, char* dir_path, char* module_name)
 {
 	char path[0x200] = {0};
 	uint32_t result = 0;
-	uint64_t base = 0;
+	uint64_t _base = 0;
 	uint32_t file_size = 0;
 	Elf64_Ehdr hdr;
 	Elf64_Phdr* phdr = 0;
@@ -54,12 +54,12 @@ uint32_t mem_build(struct mem_info* mem_info, char* dir_path, char* module_name)
 			break;
 		}
 
-		base = mem_info->addr_start;
-		if((result = read_mem(mem_info, base, (void*)&hdr, sizeof(Elf64_Ehdr))))
+		*base = _base = mem_info->addr_start;
+		if((result = read_mem(mem_info, _base, (void*)&hdr, sizeof(Elf64_Ehdr))))
 			break;
 
 		phdr = malloc(hdr.e_phnum * hdr.e_phentsize);
-		if((result = read_mem(mem_info, base + hdr.e_phoff, (void*)phdr, hdr.e_phnum * hdr.e_phentsize)))
+		if((result = read_mem(mem_info, _base + hdr.e_phoff, (void*)phdr, hdr.e_phnum * hdr.e_phentsize)))
 			break;
 
 		for(int i = 0; i < hdr.e_phnum; i++)
@@ -78,9 +78,9 @@ uint32_t mem_build(struct mem_info* mem_info, char* dir_path, char* module_name)
 				free(p);
 			}
 
-			LOG_INFO("Read addr: %lx, size: %08x\n", base + phdr[i].p_paddr, phdr[i].p_filesz);
+			LOG_INFO("Read addr: %lx, size: %08x\n", _base + phdr[i].p_paddr, phdr[i].p_filesz);
 			p = malloc(phdr[i].p_filesz);
-			if((result = read_mem(mem_info, base + phdr[i].p_vaddr, (void*)p, phdr[i].p_filesz)))
+			if((result = read_mem(mem_info, _base + phdr[i].p_vaddr, (void*)p, phdr[i].p_filesz)))
 				break;
 
 			fwrite(p, 1, phdr[i].p_filesz, fp);
@@ -110,7 +110,7 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 	Elf64_Dyn* dyn = 0;
 	
 	hdr = (Elf64_Ehdr*)mem;
-	phdr = (Elf64_Phdr*)(mem + hdr->e_phoff);
+	phdr = (Elf64_Phdr*)((uint64_t)mem + hdr->e_phoff);
 
 	do{
 		for(dymnic_id = 0; dymnic_id < hdr->e_phnum; dymnic_id++)
@@ -127,7 +127,8 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 		dyn = (Elf64_Dyn*)(mem + phdr[dymnic_id].p_offset);
 		for(int i = 0; dyn[i].d_tag || dyn[i].d_un.d_ptr; i++)
 		{
-			switch (dyn[i].d_tag) {
+			switch (dyn[i].d_tag) 
+			{
 				case DT_VERSYM:
 				case DT_RELA:
 				case DT_JMPREL:
@@ -143,11 +144,7 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 			}
 		}
 
-		
-
 	}while(0);
-
-
 
 	return result;
 }
