@@ -17,7 +17,7 @@ void show_mems_info(struct mem_info* mem_info)
 
 int main()
 {
-	uint32_t pid = 1948;
+	uint32_t pid = 29121;
 	char buf[0x200] = {0};
 	uint32_t result = 0;
 
@@ -38,7 +38,7 @@ int main()
 		printf("Init failed: %08x!\n", result);
 	}
 
-	if((result = elf_build(mem_info, "/mnt/d/dump/", "main")))
+	if((result = mem_build(mem_info, "/mnt/d/dump/", "main")))
 	{
 		printf("Build elf failed\n");
 	}

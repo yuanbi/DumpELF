@@ -11,7 +11,7 @@
 typedef uint32_t (*fn_read_mem)(struct mem_info* mem_info, uint64_t addr, void* mem, uint32_t size);
 fn_read_mem g_read_mem = 0;
 
-uint32_t elf_build(struct mem_info* mem_info, char* dir_path, char* module_name)
+uint32_t mem_build(struct mem_info* mem_info, char* dir_path, char* module_name)
 {
 	char path[0x200] = {0};
 	uint32_t result = 0;
@@ -19,7 +19,6 @@ uint32_t elf_build(struct mem_info* mem_info, char* dir_path, char* module_name)
 	uint32_t file_size = 0;
 	Elf64_Ehdr hdr;
 	Elf64_Phdr* phdr = 0;
-	Elf64_Dyn dyn;
 	void* p = NULL;
 
 	do
@@ -97,6 +96,58 @@ uint32_t elf_build(struct mem_info* mem_info, char* dir_path, char* module_name)
 	} while (0);
 
 	if(phdr) free(phdr);
+
+	return result;
+}
+
+
+uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
+{
+	uint32_t result = 0;
+	uint32_t dymnic_id = 0;
+	Elf64_Ehdr* hdr = 0;
+	Elf64_Phdr* phdr = 0;
+	Elf64_Dyn* dyn = 0;
+	
+	hdr = (Elf64_Ehdr*)mem;
+	phdr = (Elf64_Phdr*)(mem + hdr->e_phoff);
+
+	do{
+		for(dymnic_id = 0; dymnic_id < hdr->e_phnum; dymnic_id++)
+			if(phdr[dymnic_id].p_type == PT_DYNAMIC)
+				break;
+
+		if(dymnic_id == 0)
+		{
+			// TODO: ERROR_CODE
+			result = -1;
+			break;
+		}
+
+		dyn = (Elf64_Dyn*)(mem + phdr[dymnic_id].p_offset);
+		for(int i = 0; dyn[i].d_tag || dyn[i].d_un.d_ptr; i++)
+		{
+			switch (dyn[i].d_tag) {
+				case DT_VERSYM:
+				case DT_RELA:
+				case DT_JMPREL:
+				case DT_PLTGOT:
+				case DT_DEBUG:
+				case DT_SYMTAB:
+				case DT_STRTAB:
+				case DT_GNU_HASH:
+						dyn[i].d_un.d_ptr = (uint64_t)dyn[i].d_un.d_ptr - base;
+					break;
+				default:
+					break;
+			}
+		}
+
+		
+
+	}while(0);
+
+
 
 	return result;
 }
