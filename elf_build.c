@@ -112,6 +112,11 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 	hdr = (Elf64_Ehdr*)mem;
 	phdr = (Elf64_Phdr*)((uint64_t)mem + hdr->e_phoff);
 
+	hdr->e_shentsize = 0;
+	hdr->e_shnum = 0;
+	hdr->e_shoff = 0;
+	hdr->e_shstrndx = 0;
+
 	do{
 		for(dymnic_id = 0; dymnic_id < hdr->e_phnum; dymnic_id++)
 			if(phdr[dymnic_id].p_type == PT_DYNAMIC)
@@ -129,11 +134,13 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 		{
 			switch (dyn[i].d_tag) 
 			{
+				case DT_DEBUG:
+						dyn[i].d_un.d_ptr = 0;
+						break;
 				case DT_VERSYM:
 				case DT_RELA:
 				case DT_JMPREL:
 				case DT_PLTGOT:
-				case DT_DEBUG:
 				case DT_SYMTAB:
 				case DT_STRTAB:
 				case DT_GNU_HASH:
@@ -141,6 +148,11 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 					break;
 				default:
 					break;
+			}
+
+			if(dyn[i].d_tag == DT_PLTGOT)
+			{
+				
 			}
 		}
 

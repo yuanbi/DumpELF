@@ -17,7 +17,7 @@ void show_mems_info(struct mem_info* mem_info)
 
 int main()
 {
-	uint32_t pid = 2663;
+	uint32_t pid = 29121;
 	char buf[0x200] = {0};
 	uint32_t result = 0;
 	uint64_t base = 0;
@@ -48,8 +48,8 @@ int main()
 	dumpnot_release(mem_info);
 
 
-	FILE* fp = fopen("/mnt/d/dump/main_dump", "rb");
-	fseek(fp, SEEK_END, SEEK_SET);
+	FILE* fp = fopen("/mnt/d/dump/main_dump", "rb+");
+	fseek(fp, 0, SEEK_END);
 	uint32_t size = ftell(fp);
 	rewind(fp);
 
@@ -59,6 +59,8 @@ int main()
 	
 	elf_repair(base, mem, size);
 
+	rewind(fp);
+	fwrite(mem, 1, size, fp);
 	free(mem);
 	fclose(fp);
 
