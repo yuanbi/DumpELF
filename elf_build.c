@@ -69,7 +69,7 @@ uint32_t mem_build(struct mem_info* mem_info, uint64_t* base, char* dir_path, ch
 
 			if(phdr[i].p_offset > file_size)
 			{
-				LOG_INFO("Append bytes: %08x\n", phdr[i].p_offset - file_size);
+				LOG_INFO("Append bytes: %08lx\n", phdr[i].p_offset - file_size);
 				p = malloc(phdr[i].p_offset - file_size);
 				memset(p, 0, phdr[i].p_offset - file_size);
 				fwrite(p, 1, phdr[i].p_offset - file_size, fp);
@@ -78,7 +78,7 @@ uint32_t mem_build(struct mem_info* mem_info, uint64_t* base, char* dir_path, ch
 				free(p);
 			}
 
-			LOG_INFO("Read addr: %lx, size: %08x\n", _base + phdr[i].p_paddr, phdr[i].p_filesz);
+			LOG_INFO("Read addr: %lx, size: %08lx\n", _base + phdr[i].p_paddr, phdr[i].p_filesz);
 			p = malloc(phdr[i].p_filesz);
 			if((result = read_mem(mem_info, _base + phdr[i].p_vaddr, (void*)p, phdr[i].p_filesz)))
 				break;
@@ -100,6 +100,31 @@ uint32_t mem_build(struct mem_info* mem_info, uint64_t* base, char* dir_path, ch
 	return result;
 }
 
+uint32_t rva_fva(uint8_t *mem, uint64_t va)
+{
+	uint32_t result = 0;
+
+	Elf64_Ehdr* hdr = 0;
+	Elf64_Phdr* phdr = 0;
+	
+	hdr = (Elf64_Ehdr*)mem;
+	phdr = (Elf64_Phdr*)((uint64_t)mem + hdr->e_phoff);
+
+	for (int i = 0; i < hdr->e_phnum; i++) 
+	{
+		if(phdr[i].p_type != PT_DYNAMIC || phdr[i].p_type != PT_LOAD)
+			continue;
+
+		if(phdr[i].p_vaddr <= va && (phdr[i].p_vaddr + phdr[i].p_memsz) > va)
+		{
+			result = va - phdr[i].p_vaddr;
+			LOG_INFO("Va to fva: %lx - %x", va, result);
+			break;
+		}
+	}
+
+	return result;
+}
 
 uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 {
@@ -108,6 +133,9 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 	Elf64_Ehdr* hdr = 0;
 	Elf64_Phdr* phdr = 0;
 	Elf64_Dyn* dyn = 0;
+
+	uint32_t got_off = 0;
+	uint32_t got_size = 0;
 	
 	hdr = (Elf64_Ehdr*)mem;
 	phdr = (Elf64_Phdr*)((uint64_t)mem + hdr->e_phoff);
@@ -151,9 +179,7 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 			}
 
 			if(dyn[i].d_tag == DT_PLTGOT)
-			{
-				
-			}
+				got_off = rva_fva(mem, dyn[i].d_un.d_ptr);
 		}
 
 	}while(0);
