@@ -112,16 +112,31 @@ uint32_t rva_fva(uint8_t *mem, uint64_t va)
 
 	for (int i = 0; i < hdr->e_phnum; i++) 
 	{
-		if(phdr[i].p_type != PT_DYNAMIC || phdr[i].p_type != PT_LOAD)
+		if(phdr[i].p_type != PT_DYNAMIC && phdr[i].p_type != PT_LOAD)
 			continue;
 
 		if(phdr[i].p_vaddr <= va && (phdr[i].p_vaddr + phdr[i].p_memsz) > va)
 		{
-			result = va - phdr[i].p_vaddr;
-			LOG_INFO("Va to fva: %lx - %x", va, result);
+			result = va - phdr[i].p_vaddr + phdr[i].p_offset;
 			break;
 		}
 	}
+
+	LOG_INFO("Va: %lx, fa: %x\n", va, result);
+
+	return result;
+}
+
+uint32_t jmprel_repair(uint64_t base, uint8_t* mem, uint32_t size)
+{
+	uint32_t result = 0;
+
+	return result;
+}
+
+uint32_t rela_repair(uint64_t base, uint8_t* mem, uint32_t size)
+{
+	uint32_t result = 0;
 
 	return result;
 }
@@ -134,9 +149,11 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 	Elf64_Phdr* phdr = 0;
 	Elf64_Dyn* dyn = 0;
 
-	uint32_t got_off = 0;
-	uint32_t got_size = 0;
-	
+	uint32_t jmp_off = 0;
+	uint32_t jmp_size = 0;
+	uint32_t rela_off = 0;
+	uint32_t rela_size = 0;
+
 	hdr = (Elf64_Ehdr*)mem;
 	phdr = (Elf64_Phdr*)((uint64_t)mem + hdr->e_phoff);
 
@@ -178,9 +195,24 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 					break;
 			}
 
-			if(dyn[i].d_tag == DT_PLTGOT)
-				got_off = rva_fva(mem, dyn[i].d_un.d_ptr);
+			if(dyn[i].d_tag == DT_JMPREL)
+				jmp_off = rva_fva(mem, dyn[i].d_un.d_ptr);
+
+			if(dyn[i].d_tag == DT_RELSZ)
+				jmp_size = dyn[i].d_un.d_val;
+
+			if(dyn[i].d_tag == DT_RELA)
+				rela_off = rva_fva(mem, dyn[i].d_un.d_ptr);
+
+			if(dyn[i].d_tag == DT_RELASZ)
+				jmp_size = dyn[i].d_un.d_val;
 		}
+
+		if(jmp_off && jmp_size)
+			result = jmprel_repair(base, mem + jmp_off, jmp_size);
+
+		if(rela_off && rela_size && !result)
+			result = rela_repair(base, mem + rela_off, rela_size);
 
 	}while(0);
 

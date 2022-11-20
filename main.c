@@ -31,24 +31,26 @@ int main()
 
 	struct mem_info* mem_info = 0;
 	/*result = dumpnot_init("/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump", &mem_info);*/
-	result = dump_memory(pid,"/mnt/d/dump/", MODE_WHOLE_MEM);
+	/*result = dump_memory(pid,"/mnt/d/dump/", MODE_WHOLE_MEM);*/
 	/*show_mems_info(mem_info);*/
 
-	if((result = dumpnot_init("/mnt/d/dump/", &mem_info)))
+	/*if((result = dumpnot_init("/mnt/d/dump/", &mem_info)))*/
+	if((result = dumpnot_init("/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump/", &mem_info)))
 	{
 		printf("Init failed: %08x!\n", result);
 	}
 
-	if((result = mem_build(mem_info, &base, "/mnt/d/dump/", "main")))
+	/*if((result = mem_build(mem_info, &base, "/mnt/d/dump/", "main")))*/
+	if((result = mem_build(mem_info, &base, "/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump/", "main")))
 	{
 		printf("Build elf failed\n");
 	}
 
-	printf("Build elf end: %08x\n", result);
+	/*printf("Build elf end: %08x\n", result);*/
 	dumpnot_release(mem_info);
 
 
-	FILE* fp = fopen("/mnt/d/dump/main_dump", "rb+");
+	FILE* fp = fopen("/data/data/com.termux/files/home/GitHub/DumpELF/debug_dump/main_dump", "rb+");
 	fseek(fp, 0, SEEK_END);
 	uint32_t size = ftell(fp);
 	rewind(fp);
