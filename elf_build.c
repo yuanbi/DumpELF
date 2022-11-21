@@ -127,14 +127,14 @@ uint32_t rva_fva(uint8_t *mem, uint64_t va)
 	return result;
 }
 
-uint32_t jmprel_repair(uint64_t base, uint8_t* mem, uint32_t size)
+uint32_t jmprel_repair(uint64_t base, uint8_t* jmprel_mem, uint32_t jmprel_size, uint8_t* got_mem)
 {
 	uint32_t result = 0;
 
 	return result;
 }
 
-uint32_t rela_repair(uint64_t base, uint8_t* mem, uint32_t size)
+uint32_t rela_repair(uint64_t base, uint8_t* rela_mem, uint32_t rela_size, uint8_t* got_mem)
 {
 	uint32_t result = 0;
 
@@ -149,6 +149,7 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 	Elf64_Phdr* phdr = 0;
 	Elf64_Dyn* dyn = 0;
 
+	uint32_t got_off = 0;
 	uint32_t jmp_off = 0;
 	uint32_t jmp_size = 0;
 	uint32_t rela_off = 0;
@@ -182,37 +183,38 @@ uint32_t elf_repair(uint64_t base, uint8_t* mem, uint32_t size)
 				case DT_DEBUG:
 						dyn[i].d_un.d_ptr = 0;
 						break;
-				case DT_VERSYM:
 				case DT_RELA:
+					rela_off = rva_fva(mem, dyn[i].d_un.d_ptr);
+					dyn[i].d_un.d_ptr = (uint64_t)dyn[i].d_un.d_ptr - base;
+					break;
 				case DT_JMPREL:
+					jmp_off = rva_fva(mem, dyn[i].d_un.d_ptr);
+					dyn[i].d_un.d_ptr = (uint64_t)dyn[i].d_un.d_ptr - base;
+					break;
 				case DT_PLTGOT:
+					got_off = rva_fva(mem, dyn[i].d_un.d_ptr);
 				case DT_SYMTAB:
 				case DT_STRTAB:
+				case DT_VERSYM:
 				case DT_GNU_HASH:
 						dyn[i].d_un.d_ptr = (uint64_t)dyn[i].d_un.d_ptr - base;
-					break;
+						break;
+				case DT_RELSZ:
+						jmp_size = dyn[i].d_un.d_val;
+						break;
+				case DT_RELASZ:
+						rela_size = dyn[i].d_un.d_val;
+						break;
 				default:
 					break;
 			}
-
-			if(dyn[i].d_tag == DT_JMPREL)
-				jmp_off = rva_fva(mem, dyn[i].d_un.d_ptr);
-
-			if(dyn[i].d_tag == DT_RELSZ)
-				jmp_size = dyn[i].d_un.d_val;
-
-			if(dyn[i].d_tag == DT_RELA)
-				rela_off = rva_fva(mem, dyn[i].d_un.d_ptr);
-
-			if(dyn[i].d_tag == DT_RELASZ)
-				jmp_size = dyn[i].d_un.d_val;
 		}
 
 		if(jmp_off && jmp_size)
-			result = jmprel_repair(base, mem + jmp_off, jmp_size);
+			result = jmprel_repair(base, mem + jmp_off, jmp_size, mem + got_off);
 
 		if(rela_off && rela_size && !result)
-			result = rela_repair(base, mem + rela_off, rela_size);
+			result = rela_repair(base, mem + rela_off, rela_size, mem + got_off);
 
 	}while(0);
 
